@@ -9,17 +9,20 @@ get a 403 code when accessing it:
 To verify what your web server should display, use:
 
 > cd web
+
 > python -m SimpleHTTPServer
 
 In the test directory are protocol and load testing scripts. You can
 run various HTTP protocol tests using
 
 > cd tests
+
 > python protocol.py [-s server] [-p port]
 
 You can load test a web server using
 
 > cd tests
+
 > python stress-test.py [host]:[port][path] -t [threads] -d [duration]
 
 For example:
