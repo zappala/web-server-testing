@@ -13,11 +13,13 @@ class Tester:
         parser = argparse.ArgumentParser(prog='Web Server Protocol Tester', description='Tests whether a web server passes various HTTP protocol tests', add_help=True)
         parser.add_argument('-p', '--port', type=int, action='store', help='Port the server is running on',default=80)
         parser.add_argument('-s', '--server', type=str, action='store', help='Host name of the server',default='localhost')
+        parser.add_argument('-e', '--extra', action='store_true', help='Verbose output',default=False)
         parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output',default=False)
         args = parser.parse_args()
         self.host = args.server
         self.port = args.port
         self.verbose = args.verbose
+        self.extra = args.extra
 
     def run(self):
         self.testHeaders()
@@ -26,55 +28,75 @@ class Tester:
         self.testNotFound()
         self.testForbidden()
         self.testNotImplemented()
+        if self.extra:
+            self.testRange()
 
     def testHeaders(self):
         print "*** Headers ***"
-        print "Manually check that the Date, Server,Content-Length, Content-Type, and Last-Modified headers are present and have the right format"
+        print "Manually check that the Date, Server, Content-Length, Content-Type, and Last-Modified headers are present and have the right format"
+        print
         self.open_socket()
-        self.send("GET / HTTP/1.1\r\nHost:%s\r\n\r\n" % self.host)
+        self.send("GET / HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
         self.get_response([200],check=True)
         self.close_socket()
 
     def testPersistent(self):
         print "*** Persistent Connection ***"
         self.open_socket()
-        self.send("GET / HTTP/1.1\r\nHost:%s\r\n\r\n" % self.host)
+        self.send("GET / HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
         self.get_response([200],quiet=True)
-        self.send("GET / HTTP/1.1\r\nHost:%s\r\n\r\n" % self.host)
+        self.send("GET / HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
         self.get_response([200],quiet=True)
-        self.send("GET / HTTP/1.1\r\nHost:%s\r\n\r\n" % self.host)
+        self.send("GET / HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
         self.get_response([200],quiet=True)
-        self.send("GET / HTTP/1.1\r\nHost:%s\r\n\r\n" % self.host)
+        self.send("GET / HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
         self.get_response([200])
         self.close_socket()
 
     def testBad(self):
         print "*** Bad Request (400) ***"
         self.open_socket()
-        self.send("BAD / HTTP/1.1\r\nHost:%s\r\n\r\n" % self.host)
+        self.send("BAD / HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
         self.get_response([400,405,501])
         self.close_socket()
 
     def testNotFound(self):
         print "*** Not Found (404) ***"
         self.open_socket()
-        self.send("GET /fjldsfjslf HTTP/1.1\r\nHost:%s\r\n\r\n" % self.host)
+        self.send("GET /fjldsfjslf HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
         self.get_response([404])
         self.close_socket()
 
     def testForbidden(self):
         print "*** Forbidden (403) ***"
         self.open_socket()
-        self.send("GET /static/files/test.txt HTTP/1.1\r\nHost:%s\r\n\r\n" % self.host)
+        self.send("GET /static/files/test.txt HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
         self.get_response([403])
         self.close_socket()
 
     def testNotImplemented(self):
         print "*** Not Implemented (501) ***"
         self.open_socket()
-        self.send("DELETE / HTTP/1.1\r\nHost:%s\r\n\r\n" % self.host)
+        self.send("DELETE / HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
         self.get_response([501,405])
         self.close_socket()
+
+    def testRange(self):
+        import requests
+        print "*** HEAD ***"
+        r = requests.head('http://%s:%s/static/files/largefile.txt' % (self.host,self.port))
+        if r.status_code != 200:
+            print "FAILED: Expected 200, got",r.status_code
+        print "*** Range Request ***"
+        headers = {'Range':'bytes=0-999','Accept-Encoding': 'identity'}
+        r = requests.get('http://%s:%s/static/files/largefile.txt' % (self.host,self.port),headers=headers)
+        if r.status_code != 206:
+            print "FAILED: Expected 206, got",r.status_code
+            return
+        if len(r.content) != 1000:
+            print "FAILED: Expected 1000 bytes, got",len(r.content)
+            return
+        print "PASSED"
 
     def send(self,message):
         self.server.sendall(message)
