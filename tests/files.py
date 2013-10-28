@@ -7,7 +7,7 @@ if len(sys.argv) < 3:
     total = 1000
 
     # location to put files
-    directory = 'lab3www'
+    directory = 'www'
 else:
     total = int(sys.argv[1])
     directory = sys.argv[2]
