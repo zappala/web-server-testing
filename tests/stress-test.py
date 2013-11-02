@@ -16,25 +16,28 @@ import time
 from threading import Thread
 
 class RequesterThread(Thread):
-    def __init__(self, host, port, uri, duration):
+    def __init__(self, host, port, uri, duration, identifier):
         Thread.__init__(self)
         self.host = host
         self.port = port
         self.uri = uri
         self.duration = duration
+        self.identifier = identifier
 		
-    def run(self):		
+    def run(self):
         result = True
         error = ''
         start_time = time.time()
 
         conn = httplib.HTTPConnection(self.host, self.port)
 
+        num = 0
         while result and ((time.time() - start_time) < self.duration):
             buflen = 0
             try:
                 exp_start = time.time()
-                conn.request("GET", self.uri)
+                conn.request("GET", self.uri, None, {'X-Stress':'%d-%d' % (self.identifier,num)})
+                num += 1
                 resp = conn.getresponse()
                 if int(resp.status) != 200:
                     error = '(Status = %d)' % (resp.status)
@@ -76,7 +79,7 @@ class RequesterThread(Thread):
             else:
                 throughput = throughput / 1000
                 units = "Kbps"
-            print "  Finish download in %5.2f sec, throughput = %6.2f (%s)\t\t" % (elapsedtime, throughput,units),
+            print " Thread %d finished download %d in %5.2f sec, throughput = %6.2f (%s)" % (self.identifier,num-1,elapsedtime,throughput,units),
             if result:
                 print "[OK]"
             else:
@@ -89,8 +92,10 @@ class WorkloadGenerator:
         self.hostname = hostname
         self.port = 80
         self.uri = uri
+        identifier = 0
         for i in range(num_threads):
-            self.threads.append(RequesterThread(hostname, port, uri, duration))
+            self.threads.append(RequesterThread(hostname, port, uri, duration, identifier))
+            identifier += 1
         self.duration = duration
 		
     def launch_requesters(self):
