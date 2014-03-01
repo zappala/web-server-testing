@@ -60,6 +60,7 @@ class RequesterThread(Thread):
                             if len(buf) > 0:
                                 buflen += len(buf)
                             else:
+                            	error = '(No data)'
                                 result = False
                                 break
                             if buflen >= givenlength:
