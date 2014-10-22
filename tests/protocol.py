@@ -6,8 +6,6 @@ class Tester:
     def __init__(self):
         self.cache = ''
         self.size = 10000
-        self.parse_arguments()
-        self.run()
 
     def parse_arguments(self):
         parser = argparse.ArgumentParser(prog='Web Server Protocol Tester', description='Tests whether a web server passes various HTTP protocol tests', add_help=True)
@@ -22,12 +20,14 @@ class Tester:
         self.extra = args.extra
 
     def run(self):
+        self.parse_arguments()
         self.testHeaders()
         self.testPersistent()
         self.testBad()
         self.testNotFound()
         self.testForbidden()
         self.testNotImplemented()
+        self.testNonBlocking()
         if self.extra:
             self.testRange()
 
@@ -79,6 +79,25 @@ class Tester:
         self.open_socket()
         self.send("DELETE / HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
         self.get_response([501,405])
+        self.close_socket()
+
+    def testNonBlocking(self):
+        print "*** Partial Data and Non-Blocking I/O ***"
+        self.open_socket()
+        # send part of a request on first socket
+        self.send("GET / ")
+        # setup second tester
+        t = Tester()
+        t.host = self.host
+        t.port = self.port
+        t.verbose = self.verbose
+        t.open_socket()
+        # send full request on second socket
+        t.send("GET / HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
+        t.get_response([200],quiet=True)
+        # send second part of request on first socket
+        self.send("HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
+        self.get_response([200])
         self.close_socket()
 
     def testRange(self):
@@ -219,4 +238,5 @@ class Tester:
 
 
 if __name__ == '__main__':
-    s = Tester()
+    t = Tester()
+    t.run()
