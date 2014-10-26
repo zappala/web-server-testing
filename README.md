@@ -8,16 +8,6 @@ get a 403 code when accessing it:
 chmod ugo-r web/static/files/test.txt
 ```
 
-To verify what your web server should display, use:
-
-```
-cd web
-```
-
-```
-python -m SimpleHTTPServer
-```
-
 ## Protocol Testing
 
 In the test directory is a script to test how well your server
