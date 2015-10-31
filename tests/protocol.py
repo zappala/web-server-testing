@@ -85,7 +85,7 @@ class Tester:
         print "*** Partial Data and Non-Blocking I/O ***"
         self.open_socket()
         # send part of a request on first socket
-        self.send("GET / ")
+        self.send("GET")
         # setup second tester
         t = Tester()
         t.host = self.host
@@ -96,7 +96,7 @@ class Tester:
         t.send("GET / HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
         t.get_response([200],quiet=True)
         # send second part of request on first socket
-        self.send("HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
+        self.send(" / HTTP/1.1\r\nHost: %s\r\n\r\n" % self.host)
         self.get_response([200])
         self.close_socket()
 
