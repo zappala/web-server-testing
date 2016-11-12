@@ -38,36 +38,6 @@ seconds.
 
 ## Workload Testing
 
-You can use a generated workload to test your web server using
-
-```
-python generator.py --server [host] --port [port] -l [load] -d [duration]
-```
-
-This will generate load on your server using an exponential
-distribution whose average is given by [load], for [duration] seconds.
-
-For example,
-
-```
-python generator.py --port 8000 -l 10 -d 30
-```
-
-will generate 10 clients per second, for 30 seconds, accessing the web
-server on localhost at port 8000.
-
-When the script runs, each session generates output with the format:
-
-```
-[sessionID] [URI] [status] [bytes] [seconds]
-```
-
-where:
-
-```
-[sessionID] is a unique identifier for the session
-[URI] is the URI of the file downloaded
-[status] is the status phrase returned by the server
-[bytes] is the number of bytes downloaded
-[seconds] is the time it took to download the URI, in seconds
-```
+You can use the (tsung)[http://tsung.erlang-projects.org/] tool to
+test your web server under a variety of conditions. This directory
+contains a set of tsung scripts.
