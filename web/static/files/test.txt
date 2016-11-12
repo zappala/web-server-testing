@@ -1,1 +1,4 @@
-Forbidden
+If you are seeing this file, you have made a mistake in configuring your web server. This file
+should not have read permissions set.
+
+
